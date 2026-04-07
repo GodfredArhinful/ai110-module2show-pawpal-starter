@@ -2,15 +2,36 @@
 
 ## 1. System Design
 
+**Core Actions:**
+
+1. Enter basic owner and pet information
+2. Add or edit care tasks with details like duration and priority
+3. Generate and view a daily schedule/plan based on constraints and priorities
+
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+The initial UML design consists of four main classes: Owner, Pet, Task, and Scheduler.
+
+- **Owner**: Represents the pet owner, holding attributes like name and preferences (e.g., available time slots). Responsibilities include managing pets (adding/getting pets) and updating preferences.
+
+- **Pet**: Represents an individual pet, with attributes such as name, species, age, and special needs. It manages tasks associated with the pet (adding/getting tasks) and provides pet information.
+
+- **Task**: Represents a care task, with attributes including description, duration, priority, time preference, and recurring schedule. It can check if the task is due on a given date and provide duration/priority info.
+
+- **Scheduler**: Handles the core logic for scheduling, using the owner and tasks to generate daily plans, resolve conflicts, and sort tasks by priority.
+
+Relationships: Owner has many Pets, Pet has many Tasks, Scheduler uses Owner and manages Tasks.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+Yes, the design changed during implementation. 
+
+- Added a `get_all_tasks()` method to the Owner class to collect all tasks from all pets, ensuring the Scheduler can access tasks through the owner rather than maintaining a separate list.
+- Modified the Scheduler's `__init__` to only take an Owner parameter, removing the redundant tasks parameter to avoid potential inconsistencies.
+- Implemented simple logic in Task's `is_due()`, `get_duration()`, and `get_priority()` methods, as well as Pet's `add_task()`, `get_tasks()`, and `get_info()` methods, and Owner's `add_pet()`, `get_pets()`, and `update_preferences()` methods to establish bidirectional relationships and basic functionality.
+- In Pet's `add_task()`, added logic to set `task.pet = self` to maintain the relationship between Task and Pet.
+
+These changes improve data consistency, reduce redundancy, and prepare the skeleton for actual scheduling logic implementation.
 
 ---
 
