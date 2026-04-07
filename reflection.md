@@ -44,8 +44,24 @@ These changes improve data consistency, reduce redundancy, and prepare the skele
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+**Exact-time conflict detection vs. overlap detection**
+
+The current `detect_conflicts()` method flags two tasks as conflicting only when
+they share an identical HH:MM `time` string (e.g., both at `"08:00"`).  It does
+**not** check whether the time windows overlap (e.g., a 30-minute task at 07:45
+and a 20-minute task at 08:00 would overlap in reality but are not flagged).
+
+*Why this tradeoff is reasonable here:*  
+Implementing true overlap detection requires knowing when each task starts **and**
+ends, which means the scheduler would need to assign absolute start times to every
+task rather than just slotting them into broad "morning / afternoon / evening"
+buckets.  For a household pet-care planner, most users think in discrete
+appointment slots ("feed the cat at 8 AM"), not back-to-back blocks, so exact
+time matching catches the practically common case (two reminders set to the same
+clock time) without the added complexity of a full interval-overlap algorithm.
+
+A natural next step would be to track cumulative start times within each slot and
+flag any pair `(task_a, task_b)` where `start_a + duration_a > start_b`.
 
 ---
 
