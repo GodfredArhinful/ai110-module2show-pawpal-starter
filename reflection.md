@@ -39,8 +39,14 @@ These changes improve data consistency, reduce redundancy, and prepare the skele
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+The scheduler considers multiple constraints:
+- **Time constraints**: Specific HH:MM times take precedence, followed by time preference slots (morning/afternoon/evening)
+- **Priority**: Higher priority tasks are scheduled first within their time constraints
+- **Capacity limits**: Each time slot has maximum minutes (morning: 180min, afternoon: 120min, evening: 180min)
+- **Daily budget**: Owner's available_time preference limits total daily minutes
+- **Recurrence patterns**: Daily tasks repeat every day, weekly tasks repeat on the same weekday
+
+Priority was decided as the most important constraint because pet care tasks have varying urgency - feeding and medication are critical, while grooming might be less urgent. Time constraints were prioritized over pure priority when both exist because real-world scheduling requires specific timing for things like medication schedules.
 
 **b. Tradeoffs**
 
@@ -69,13 +75,24 @@ flag any pair `(task_a, task_b)` where `start_a + duration_a > start_b`.
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+I used VS Code Copilot extensively throughout the project:
+- **Design brainstorming**: Used Copilot Chat to generate initial UML diagram ideas and class structure suggestions
+- **Code generation**: Copilot inline suggestions helped write boilerplate code for classes, methods, and test functions
+- **Debugging**: Asked Copilot to explain test failures and suggest fixes for logic errors
+- **Documentation**: Used Copilot to help write clear docstrings and README sections
+- **Testing**: Copilot helped generate comprehensive test cases and explain testing patterns
+
+The most helpful prompts were specific questions about the codebase like "Based on my final implementation, what updates should I make to my initial UML diagram?" and "Why is this test failing, and is the bug in my test code or my pawpal_system.py logic?"
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+One moment where I rejected an AI suggestion was when Copilot suggested using a simple priority sort for the scheduler instead of the time-based sorting I had designed. The AI suggested sorting purely by priority descending, but I knew the requirements needed time-based ordering first, then priority as tiebreaker. I rejected this because it didn't match the user's need for chronological scheduling.
+
+I verified AI suggestions by:
+- Running tests to ensure functionality worked correctly
+- Checking that the code matched the system design requirements
+- Manually reviewing logic for edge cases
+- Testing with real data scenarios to ensure practical usability
 
 ---
 
@@ -83,13 +100,25 @@ flag any pair `(task_a, task_b)` where `start_a + duration_a > start_b`.
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+I tested core scheduling behaviors including:
+- Task sorting by time and priority (chronological ordering with priority tiebreakers)
+- Recurrence logic (daily/weekly task auto-scheduling when completed)
+- Conflict detection (warning about tasks at same HH:MM time)
+- Conflict resolution (skipping tasks that exceed capacity/budget limits)
+- Edge cases (pets with no tasks, multiple pets, weekly recurrence patterns)
+
+These tests were important because they verify the smart algorithms that differentiate PawPal+ from a simple task list - ensuring tasks appear in the right order, conflicts are caught, and recurring tasks are properly managed.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+I am highly confident (5/5 stars) that the scheduler works correctly. All 9 automated tests pass, covering both happy paths and edge cases. The system handles complex scenarios like multi-pet households, time conflicts, and capacity constraints reliably.
+
+If I had more time, I would test:
+- Month-long recurrence patterns to ensure weekly tasks work across month boundaries
+- Time zone handling for users in different regions
+- Integration with calendar APIs for external scheduling
+- Performance with very large numbers of tasks/pets
+- UI responsiveness with many concurrent users
 
 ---
 
@@ -97,12 +126,17 @@ flag any pair `(task_a, task_b)` where `start_a + duration_a > start_b`.
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+I am most satisfied with the intelligent scheduling algorithms. The system successfully implements complex logic for time-based sorting, conflict detection, capacity management, and recurrence handling - going far beyond a simple priority list. The clean separation of concerns between Owner/Pet/Task/Scheduler classes made the codebase maintainable and testable.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+If I had another iteration, I would:
+- Add a visual calendar view in the Streamlit UI to show the schedule over multiple days
+- Implement drag-and-drop task reordering for manual adjustments
+- Add notifications/reminders for upcoming tasks
+- Include more sophisticated conflict resolution (suggesting alternative times instead of just skipping)
+- Add data persistence so schedules survive app restarts
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+The most important thing I learned is the value of being the "lead architect" when collaborating with AI. While AI tools like Copilot are incredibly powerful for code generation and debugging, they need human direction to ensure the solution matches the actual requirements and maintains design coherence. I learned to use AI as a skilled assistant rather than a replacement for design thinking - asking the right questions, verifying suggestions against requirements, and maintaining the vision for how the system should work.

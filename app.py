@@ -118,7 +118,11 @@ if st.session_state.owner and st.session_state.owner.get_pets():
     with col4:
         recurring = st.selectbox("Recurring", ["daily", "weekly"])
     
-    time_pref = st.selectbox("Time preference", ["morning", "afternoon", "evening"])
+    col5, col6 = st.columns(2)
+    with col5:
+        time_pref = st.selectbox("Time preference", ["morning", "afternoon", "evening"])
+    with col6:
+        specific_time = st.text_input("Specific time (HH:MM, optional)", placeholder="08:30", help="Leave empty to use time preference only")
     
     if st.button("Add Task"):
         new_task = Task(
@@ -127,7 +131,8 @@ if st.session_state.owner and st.session_state.owner.get_pets():
             priority=int(priority),
             time_preference=time_pref,
             recurring=recurring,
-            pet=selected_pet
+            pet=selected_pet,
+            time=specific_time if specific_time else None
         )
         selected_pet.add_task(new_task)
         st.success(f"Task '{task_title}' added to {selected_pet_name}!")
@@ -142,24 +147,53 @@ if st.session_state.owner and st.session_state.owner.get_pets():
         scheduler = Scheduler(st.session_state.owner)
         today = datetime.now().strftime("%Y-%m-%d")
         daily_plan = scheduler.generate_daily_plan(today)
+        conflicts = scheduler.detect_conflicts(daily_plan)
+        
+        if conflicts:
+            st.warning("⚠️ **Schedule Conflicts Detected:**")
+            for conflict in conflicts:
+                st.write(f"- {conflict}")
+            st.divider()
         
         if daily_plan:
             st.success(f"✅ Generated schedule for {today}")
             
+            # Display schedule in a table format
+            schedule_data = []
             total_duration = 0
+            
             for idx, task in enumerate(daily_plan, 1):
-                with st.expander(f"{idx}. {task.description} (Priority: {task.get_priority()}/5)"):
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write(f"**Pet:** {task.pet.name}")
-                        st.write(f"**Duration:** {task.get_duration()} minutes")
-                    with col2:
-                        st.write(f"**Time:** {task.time_preference}")
-                        st.write(f"**Recurring:** {task.recurring}")
+                time_display = task.time if task.time else task.time_preference.capitalize()
+                schedule_data.append({
+                    "Order": idx,
+                    "Time": time_display,
+                    "Task": task.description,
+                    "Pet": task.pet.name,
+                    "Duration": f"{task.get_duration()} min",
+                    "Priority": f"{task.get_priority()}/5"
+                })
                 total_duration += task.get_duration()
             
-            st.divider()
+            st.table(schedule_data)
             st.metric("Total Time Needed", f"{total_duration} minutes")
+            
+            # Task completion section
+            st.subheader("Mark Tasks Complete")
+            st.caption("Complete tasks to schedule their next recurrence.")
+            
+            completed_tasks = []
+            for task in daily_plan:
+                if st.button(f"✅ Complete: {task.description}", key=f"complete_{task.description}_{id(task)}"):
+                    next_task = scheduler.mark_task_complete(task, today)
+                    completed_tasks.append(task.description)
+                    if next_task:
+                        st.info(f"📅 Next '{task.description}' scheduled for {next_task.due_date}")
+            
+            if completed_tasks:
+                st.success(f"Completed: {', '.join(completed_tasks)}")
+                if st.button("🔄 Regenerate Schedule"):
+                    st.rerun()
+                    
         else:
             st.info("No tasks due today.")
 
